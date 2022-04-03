@@ -1,5 +1,8 @@
 import path from "path";
-import ts from "typescript";
+import { debug } from "../../logging";
+import type { PickKnown } from "../../types";
+import type { NormalizedCompilerOptions } from "./normalizeCompilerOptions";
+import { normalizeCompilerOptions } from "./normalizeCompilerOptions";
 
 /**
  * Used to load the Typescript Compiler Options for a given project. First
@@ -9,7 +12,10 @@ import ts from "typescript";
  *
  * @param project An absolute filepath for a Typescript `tsconfig.json` file.
  */
-export const loadCompilerOptions = (project: string): ts.CompilerOptions => {
+export const loadCompilerOptions = async (
+  project: string
+): Promise<PickKnown<NormalizedCompilerOptions>> => {
+  const ts = await import(`typescript`);
   const baseDir = path.dirname(project); //?
   const fileName = path.basename(project); //?
   const tsconfigPath = ts.findConfigFile(baseDir, ts.sys.fileExists.bind(null), fileName);
@@ -22,11 +28,11 @@ export const loadCompilerOptions = (project: string): ts.CompilerOptions => {
 
   if (error) {
     // eslint-disable-next-line no-console
-    console.debug({ error });
+    debug({ error });
     throw new Error(`Error reading typescript configration: ${fileName}`);
   }
 
   const { options } = ts.parseJsonConfigFileContent(config, ts.sys, baseDir);
 
-  return options;
+  return normalizeCompilerOptions(options);
 };

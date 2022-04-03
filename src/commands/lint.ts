@@ -1,23 +1,16 @@
 import path from "path";
-import { Flags } from "@oclif/core";
+import { Command, Flags } from "@oclif/core";
 import execa from "execa";
 import semver from "semver";
 import * as dependencies from "../dependencies";
 import type defaultESLintConfig from "../defaults/eslintConfig";
-import { BaseCommand } from "../BaseCommand";
 import { VERSION } from "../types/module";
 import { error, log } from "../logging";
-import { importModule } from "../filesystem/npm";
+import { getConfig } from "../filesystem/config";
+import { getPath } from "../filesystem/npm";
 
-export class Lint extends BaseCommand<typeof defaultESLintConfig> {
-  bin = `eslint/bin/eslint`;
-
+export class Lint extends Command {
   static description = `Lints the files in the current project`;
-
-  constructor(argv: string[], config: BaseCommand["config"]) {
-    super(argv, config);
-    this.defaultConfig = importModule(path.join(__dirname, `../defaults/eslintConfig`));
-  }
 
   static flags = {
     help: Flags.help({ char: `h` }),
@@ -61,16 +54,17 @@ export class Lint extends BaseCommand<typeof defaultESLintConfig> {
       return;
     }
 
-    const { config } = await this.getConfig(
+    const { config } = await getConfig<typeof defaultESLintConfig>(
       cwd,
       `eslint`,
+      path.join(__dirname, `../defaults/eslintConfig`),
       Boolean(parsedFlags.useDefaults),
       parsedFlags.config
     );
 
     if (version && semver.gt(`7.0.0`, version)) {
       log(`Older version of ESLint detected, invoking via CLI`);
-      await execa.node(await this.getBin(!parsedFlags.useDefaults), argv, {
+      await execa.node(await getPath(`eslint/bin/eslint`, !parsedFlags.useDefaults), argv, {
         env: { FORCE_COLOR: `true` },
         cwd,
         stdio: `inherit`

@@ -1,12 +1,11 @@
-import { Flags } from "@oclif/core";
+import { Command, Flags } from "@oclif/core";
 import execa from "execa";
-import { BaseCommand } from "../BaseCommand";
-import { mapFlags } from "../utils";
-import { getTSConfig } from "../utils/ts";
+import { getTSConfig } from "../filesystem/config";
+import { getPath } from "../filesystem/npm";
+import { mapFlags, spinner } from "../utils";
+import { loadCompilerOptions } from "../utils/ts";
 
-export class Check extends BaseCommand {
-  bin = `typescript/bin/tsc`;
-
+export class Check extends Command {
   static description = `Typechecks all of the files in the current project`;
 
   static strict = false;
@@ -31,14 +30,14 @@ export class Check extends BaseCommand {
     const cwd = process.cwd();
     const { flags: parsedFlags, argv } = await this.parse(Check);
     const project = await getTSConfig(cwd, parsedFlags.project);
-    const compilerOptions = mapFlags(this.loadCompilerOptions(project));
+    const compilerOptions = mapFlags(loadCompilerOptions(project));
     const args = [`--noEmit`, ...argv, ...compilerOptions.flat()];
-    const spinner = this.spinner(`Typechecking files...\n`).start();
-    await execa.node(await this.getBin(), args, {
+    const checking = spinner(`Typechecking files...\n`).start();
+    await execa.node(await getPath(`typescript/bin/tsc`), args, {
       env: { FORCE_COLOR: `true` },
       cwd,
       stdio: `inherit`
     });
-    spinner.succeed(`Typecheck complete`);
+    checking.succeed(`Typecheck complete`);
   }
 }

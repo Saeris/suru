@@ -1,9 +1,8 @@
 import path from "path";
-import { Flags } from "@oclif/core";
+import { Command, Flags } from "@oclif/core";
 import execa from "execa";
 import chalk from "chalk";
 import inquirer from "inquirer";
-import { BaseCommand } from "../BaseCommand";
 import {
   filterFilesByExtensions,
   findFilesByExtension,
@@ -18,8 +17,9 @@ import {
 } from "../filesystem/git";
 import { loadManifest } from "../filesystem/npm";
 import { error } from "../logging";
+import { spinner } from "../utils";
 
-export class Convert extends BaseCommand {
+export class Convert extends Command {
   static description = `Changes file extensions on project files to their Typescript equivalents using "git mv", preserving commit history`;
 
   static flags = {
@@ -56,12 +56,12 @@ export class Convert extends BaseCommand {
     const { ignore, dryRun, quiet, silent } = parsedFlags;
     const { name } = await loadManifest();
 
-    this.spinner(`Checking commit status of ${String(name)}`, { silent }).succeed();
+    spinner(`Checking commit status of ${String(name)}`, { silent }).succeed();
 
     try {
       // Warn the user about running this command in a dirty working directory
       if (await isWorkingDirClean()) {
-        this.spinner(`Working directory is clean`, { silent }).succeed();
+        spinner(`Working directory is clean`, { silent }).succeed();
       } else {
         const { proceed } = await inquirer.prompt({
           type: `confirm`,
@@ -71,7 +71,7 @@ export class Convert extends BaseCommand {
         });
 
         if (!proceed) {
-          this.spinner(`Skipped execution`, { silent }).fail();
+          spinner(`Skipped execution`, { silent }).fail();
           this.exit(0);
         }
       }
@@ -81,7 +81,7 @@ export class Convert extends BaseCommand {
       }
     }
 
-    const updateSpinner = this.spinner(`Searching for files to update...\n`).start();
+    const updateSpinner = spinner(`Searching for files to update...\n`).start();
 
     // Grab the root directory to glob from the CLI args
     const rootDir = argv[0];
@@ -128,7 +128,7 @@ export class Convert extends BaseCommand {
     });
 
     if (skipped.length) {
-      this.spinner(
+      spinner(
         `${chalk.bold(
           `${skipped.length} files`
         )} are new or have been modified and will be skipped${
@@ -142,7 +142,7 @@ export class Convert extends BaseCommand {
       ).info();
     }
 
-    this.spinner(
+    spinner(
       `${chalk.bold(`${updateFilepaths.size} files`)} will be renamed${
         quiet
           ? ``
@@ -159,7 +159,7 @@ export class Convert extends BaseCommand {
     ).succeed();
 
     if (!dryRun) {
-      const renameSpinner = this.spinner(`Changing file extensions...\n`, { silent }).start();
+      const renameSpinner = spinner(`Changing file extensions...\n`, { silent }).start();
 
       for await (const [src, dest] of updateFilepaths) {
         await execa(`git`, [`mv`, src, dest], {

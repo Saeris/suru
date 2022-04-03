@@ -1,23 +1,16 @@
 import path from "path";
-import { Flags } from "@oclif/core";
+import { Command, Flags } from "@oclif/core";
 import execa from "execa";
 import { cosmiconfig } from "cosmiconfig";
 import type { TransformOptions } from "@babel/core";
 import babelConfig from "../defaults/babelConfig";
 import type defaultJestConfig from "../defaults/jestConfig";
 import { omit, mapFlags } from "../utils";
-import { BaseCommand } from "../BaseCommand";
 import { error, log } from "../logging";
-import { importModule } from "../filesystem/npm";
+import { getConfig } from "../filesystem/config";
+import { getPath } from "../filesystem/npm";
 
-export class Test extends BaseCommand<typeof defaultJestConfig> {
-  bin = `jest/bin/jest`;
-
-  constructor(argv: string[], config: BaseCommand["config"]) {
-    super(argv, config);
-    this.defaultConfig = importModule(path.join(__dirname, `../defaults/jestConfig`));
-  }
-
+export class Test extends Command {
   static description = `Runs Jest`;
 
   static strict = false;
@@ -57,9 +50,10 @@ export class Test extends BaseCommand<typeof defaultJestConfig> {
   async run(): Promise<void> {
     const cwd = process.cwd();
     const { flags: parsedFlags, argv } = await this.parse(Test);
-    const { filepath } = await this.getConfig(
+    const { filepath } = await getConfig<typeof defaultJestConfig>(
       cwd,
       `jest`,
+      path.join(__dirname, `../defaults/jestConfig`),
       Boolean(parsedFlags.useDefaults),
       parsedFlags.config
     );
@@ -71,7 +65,7 @@ export class Test extends BaseCommand<typeof defaultJestConfig> {
     const args = [...argv, ...options.flat()];
     log(`Running Jest tests...`);
 
-    await execa.node(await this.getBin(!parsedFlags.useDefaults), args, {
+    await execa.node(await getPath(`jest/bin/jest`, !parsedFlags.useDefaults), args, {
       env: { FORCE_COLOR: `true`, NODE_ENV: `test` },
       cwd,
       stdio: `inherit`

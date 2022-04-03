@@ -1,14 +1,13 @@
 import path from "path";
 import { existsSync } from "fs";
 import { promisify } from "util";
-import { Flags } from "@oclif/core";
+import { Command, Flags } from "@oclif/core";
 import type { OutputOptions } from "rollup";
 import rimraf from "rimraf";
-import { BaseCommand } from "../BaseCommand";
 import { HEURISTICS } from "../types/package";
 import { findFilesByName, copyFiles, writeFiles, writeJson } from "../filesystem";
 import { loadManifest, logDependencyVersions } from "../filesystem/npm";
-import { getTSConfig, emitTypes, getEmitDiagnostics } from "../utils/ts";
+import { emitTypes, getEmitDiagnostics, loadCompilerOptions } from "../utils/ts";
 import {
   addEntrypoint,
   getTargets,
@@ -23,10 +22,12 @@ import {
   mapTranspilationResults,
   transpileESM
 } from "../utils/pack";
+import { spinner } from "../utils";
+import { getTSConfig } from "../filesystem/config";
 
 const EXT_REGEX = /\.(?<ext>[jt]sx?)$/i;
 
-export class Pack extends BaseCommand {
+export class Pack extends Command {
   static description = `Runs Pika Pack`;
 
   static flags = {
@@ -97,18 +98,18 @@ export class Pack extends BaseCommand {
 
     // Step 1: Clean up previous build output
     if (existsSync(dist)) {
-      const cleaning = this.spinner(` Cleaning dist directory...\n`).start();
+      const cleaning = spinner(` Cleaning dist directory...\n`).start();
       await promisify(rimraf)(dist);
       cleaning.stopAndPersist({ symbol: `🧹`, text: `Cleaned up previous build output` });
     }
 
     // Step 2: Generate Transpilation Targets
-    const compiling = this.spinner(` Compiling library from source using Babel...\n`).start();
+    const compiling = spinner(` Compiling library from source using Babel...\n`).start();
     const parsed = await parseSrc(srcDir, files);
     // The order we add entrypoints matters, see:
     // https://nodejs.org/api/packages.html#conditional-exports
     if (targets.includes(`esm`)) {
-      const transpiling = this.spinner(` Generating ESM build...\n`).start();
+      const transpiling = spinner(` Generating ESM build...\n`).start();
       await addEntrypoint(basename, `esm`);
       await writeFiles(
         mapTranspilationResults(
@@ -121,7 +122,7 @@ export class Pack extends BaseCommand {
       transpiling.stopAndPersist({ symbol: `📦`, text: `Generated ESM Output` });
     }
     if (targets.includes(`cjs`)) {
-      const transpiling = this.spinner(` Generating CJS build...\n`).start();
+      const transpiling = spinner(` Generating CJS build...\n`).start();
       await addEntrypoint(basename, `cjs`);
       await writeFiles(
         mapTranspilationResults(
@@ -136,13 +137,13 @@ export class Pack extends BaseCommand {
 
     // Step 3: Emit Type Declarations from source
     if (manifest[HEURISTICS].usesTypescript) {
-      const emitting = this.spinner(` Generating Typescript type definitions...\n`).start();
+      const emitting = spinner(` Generating Typescript type definitions...\n`).start();
       await addEntrypoint(basename, `types`);
       const ts = await import(`typescript`);
       const { results, ...rest } = emitTypes({
         ts,
         fileNames: files.map((filename) => path.join(srcDir, filename)),
-        options: this.loadCompilerOptions(await getTSConfig(cwd, parsedFlags.project)),
+        options: loadCompilerOptions(await getTSConfig(cwd, parsedFlags.project)),
         outDir: path.join(dist, `types`)
       });
       await writeFiles(results);
@@ -154,7 +155,7 @@ export class Pack extends BaseCommand {
 
     // Step 4: Geneate Bundles from lib
     if (targets.length && parsedFlags.bundle) {
-      const bundling = this.spinner(` Generating Bundles...\n`).start();
+      const bundling = spinner(` Generating Bundles...\n`).start();
       await writeBundles(
         await generateBundle(path.join(dist, `lib`, bundleName)),
         [
@@ -168,7 +169,7 @@ export class Pack extends BaseCommand {
     }
 
     // Step 5: Generate Lib Output
-    const transpiling = this.spinner(` Generating Lib...\n`).start();
+    const transpiling = spinner(` Generating Lib...\n`).start();
     await addEntrypoint(basename, `lib`);
     await writeFiles(
       mapTranspilationResults(
@@ -182,7 +183,7 @@ export class Pack extends BaseCommand {
     compiling.stopAndPersist({ symbol: `🎉`, text: `Finished compiling source files` });
 
     // Step 6: Copy Required Files to dist directory
-    const copyReqired = this.spinner(` Copying required files...\n`).start();
+    const copyReqired = spinner(` Copying required files...\n`).start();
     const alwaysIncluded = [
       `README`,
       `CHANGES`,
@@ -204,7 +205,7 @@ export class Pack extends BaseCommand {
     copyReqired.stopAndPersist({ symbol: `📝`, text: `Copied required files` });
 
     if (manifest.bin) {
-      const copying = this.spinner(` Copying Bin files...\n`).start();
+      const copying = spinner(` Copying Bin files...\n`).start();
       await copyFiles(
         Object.values(Array.isArray(manifest.bin) ? manifest.bin : [manifest.bin]).reduce(
           (filePaths, source) =>
@@ -216,7 +217,7 @@ export class Pack extends BaseCommand {
     }
 
     if (manifest.files) {
-      const copying = this.spinner(` Copying User Defined Files...\n`).start();
+      const copying = spinner(` Copying User Defined Files...\n`).start();
       await copyFiles(
         manifest.files.reduce(
           (filePaths, source) =>
@@ -229,6 +230,6 @@ export class Pack extends BaseCommand {
 
     // Step 7: Write modified Package Manifest to dist directory
     await writeJson(path.join(cwd, `dist/package.json`), manifest);
-    this.spinner(` Packaging complete! Results written to ./dist/package.json`).succeed();
+    spinner(` Packaging complete! Results written to ./dist/package.json`).succeed();
   }
 }

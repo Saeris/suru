@@ -5,4 +5,5 @@ export { mapFlags } from "./mapFlags";
 export { omit } from "./omit";
 export { orderKeys } from "./orderKeys";
 export { pick } from "./pick";
+export { spinner } from "./spinner";
 export { toCamelCase } from "./toCamelCase";

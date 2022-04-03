@@ -1,16 +1,16 @@
-import { Flags } from "@oclif/core";
+import { Command, Flags } from "@oclif/core";
 import execa from "execa";
 import { fetch } from "cross-fetch";
 import chalk from "chalk";
 import inquirer from "inquirer";
-import { BaseCommand } from "../BaseCommand";
 import type { Package } from "../types/package";
 import { PACKAGEROOT } from "../types/package";
 import { findFilesByExtension } from "../filesystem";
 import { getConsumerRoot } from "../filesystem/git";
 import { getWorkspaces, loadManifest, scopeToSnakeCase } from "../filesystem/npm";
+import { spinner } from "../utils";
 
-export class Find extends BaseCommand {
+export class Find extends Command {
   static description = `Checks for available type definition packages and installs them.`;
 
   static flags = {
@@ -45,7 +45,7 @@ export class Find extends BaseCommand {
 
   findTypes = async (manifest: Package): Promise<void> => {
     const { flags: parsedFlags } = await this.parse(Find);
-    const spinner = this.spinner(`Searching for types...\n`).start();
+    const searching = spinner(`Searching for types...\n`).start();
     const { dependencies = {}, devDependencies = {}, name, [PACKAGEROOT]: root } = manifest;
     const dependencyNames = Object.keys(dependencies);
     const devDependencyNames = Object.keys(devDependencies).filter(
@@ -73,7 +73,7 @@ export class Find extends BaseCommand {
       []
     );
 
-    spinner.stopAndPersist({
+    searching.stopAndPersist({
       symbol: `🔎`,
       text: `Inspected ${chalk.bold(filtered.length)} dependencies of ${String(name)}.\n`
     });
@@ -100,13 +100,13 @@ export class Find extends BaseCommand {
     );
 
     if (hasNativeTypes.length) {
-      this.spinner(
+      spinner(
         `${chalk.bold(`${hasNativeTypes.length} modules`)} have native types available.\n`
       ).succeed();
     }
 
     if (noTypes.length) {
-      this.spinner(
+      spinner(
         `${chalk.bold(`${noTypes.length} modules`)} do not have types available:\n\n  ${chalk.dim(
           noTypes.join(`\n  `)
         )}\n`
@@ -114,7 +114,7 @@ export class Find extends BaseCommand {
     }
 
     if (hasDeclarations.length) {
-      this.spinner(
+      spinner(
         `${chalk.bold(
           `${hasDeclarations.length} modules`
         )} have declarations available via a separate package:\n\n  ${chalk.dim(
