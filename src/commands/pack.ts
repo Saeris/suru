@@ -11,9 +11,9 @@ import { loadManifest, logDependencyVersions } from "../filesystem/npm";
 import { getTSConfig, emitTypes, getEmitDiagnostics } from "../utils/ts";
 import {
   addEntrypoint,
-  parseTargets,
+  getTargets,
   getSourceFiles,
-  transpileSrc,
+  transpileLib,
   generateBundle,
   writeBundles,
   writeESMBundle,
@@ -93,7 +93,7 @@ export class Pack extends BaseCommand {
     const srcDir = path.dirname(absEntryPoint);
     const files = await getSourceFiles({ cwd: srcDir });
     const sourceMaps = parsedFlags.sourceMaps;
-    const targets = parseTargets(parsedFlags.targets);
+    const targets = getTargets(parsedFlags.targets);
 
     // Step 1: Clean up previous build output
     if (existsSync(dist)) {
@@ -172,7 +172,7 @@ export class Pack extends BaseCommand {
     await addEntrypoint(basename, `lib`);
     await writeFiles(
       mapTranspilationResults(
-        await transpileSrc(parsed, sourceMaps),
+        await transpileLib(parsed, sourceMaps),
         files,
         path.join(dist, `lib`),
         sourceMaps
