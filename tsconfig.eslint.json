@@ -1,0 +1,5 @@
+/* Used by ESLint to determine what files to use for Typescript Linting */
+{
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules", "**/__fixtures__/**/*.*", "./bin"]
+}

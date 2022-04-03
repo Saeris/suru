@@ -1,0 +1,47 @@
+/* Base Compiler Options and default exclusions. Each package extends this config. */
+{
+  "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tsconfig.json",
+  "exclude": ["node_modules", "**/__tests__/*.*", "**/__fixtures__/**/*.*", "**/pkg/*.*"],
+  "include": ["bin/**/*", "src/**/*"],
+  "ts-node": {
+    "transpileOnly": true
+  },
+  "compilerOptions": {
+    "outDir": "lib",
+
+    // Always include these settings
+    "declarationMap": true,
+    "sourceMap": true,
+    "importHelpers": true,
+
+    /* Basic Options */
+    "target": "ESNext",
+    "module": "commonjs",
+    "lib": [
+      "ESNext", // adds support for ESNext functionality
+      "DOM" // adds support for 'window' other dom methods
+    ],
+    "allowJs": true,
+
+    /* JSX support */
+    "jsx": "preserve",
+    "declaration": true,
+
+    /* Strict Type-Checking Options */
+    "strict": false,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    // "strictFunctionTypes": true,
+
+    /* Module Resolution Options */
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+
+    /* Advanced Options */
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  }
+}

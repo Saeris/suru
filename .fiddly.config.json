@@ -1,0 +1,9 @@
+{
+  "name": "💮 suru",
+  "description": "to do",
+  "noHeader": true,
+  "homepage:": "http://saeris.io",
+  "repo": "https://github.com/saeris/suru",
+  "favicon": "static/favicon.ico",
+  "styles": "styles/styles.css"
+}
