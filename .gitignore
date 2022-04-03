@@ -32,7 +32,7 @@
 !.vscode/extensions.json
 
 # misc
-/.coverage
+/coverage
 .eslintcache
 npm-debug.log
 yarn-error.log
