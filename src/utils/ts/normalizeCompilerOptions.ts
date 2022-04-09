@@ -1,7 +1,7 @@
-import type { loadCompilerOptions } from "./loadCompilerOptions";
 import { omit } from "../omit";
 import type { KnownKeys, PickKnown } from "../../types";
 import { isDefined } from "../isDefined";
+import type { CompilerOptions } from "./types";
 
 const ImportsNotUsedAsValues = {
   0: `remove`,
@@ -51,8 +51,6 @@ const Targets = {
   99: `esnext`,
   100: `json`
 } as const;
-
-type CompilerOptions = ReturnType<typeof loadCompilerOptions>;
 type KnownCompilerOptions = Pick<CompilerOptions, KnownKeys<CompilerOptions>>;
 export interface NormalizedCompilerOptions
   extends Omit<

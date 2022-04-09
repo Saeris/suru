@@ -30,7 +30,7 @@ export class Check extends Command {
     const cwd = process.cwd();
     const { flags: parsedFlags, argv } = await this.parse(Check);
     const project = await getTSConfig(cwd, parsedFlags.project);
-    const compilerOptions = mapFlags(loadCompilerOptions(project));
+    const compilerOptions = mapFlags(await loadCompilerOptions(project));
     const args = [`--noEmit`, ...argv, ...compilerOptions.flat()];
     const checking = spinner(`Typechecking files...\n`).start();
     await execa.node(await getPath(`typescript/bin/tsc`), args, {

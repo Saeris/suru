@@ -6,7 +6,7 @@ import type * as Rollup from "rollup";
 import type * as RollupPluginBabel from "@rollup/plugin-babel";
 import type RollupPluginTerser from "rollup-plugin-terser";
 import type RollupPluginPeerDepsExternal from "rollup-plugin-peer-deps-external";
-import type Typescript from "typescript";
+import type { Typescript } from "./utils/ts/types";
 import type { ImportedModuleMeta } from "./types/module";
 import { importModule } from "./filesystem/npm";
 import { BABEL_DEPENDENCIES } from "./heuristics/babel";
@@ -40,5 +40,5 @@ export const rollupPluginTerser: ToolingDependency<typeof RollupPluginTerser> = 
 export const rollupPeerDepsExternal: ToolingDependency<
   typeof RollupPluginPeerDepsExternal
 > = async (local = true) => importModule(ROLLUP_DEPENDENCIES.PLUGIN_PEER_DEPS_EXTERNAL, local);
-export const typescript: ToolingDependency<typeof Typescript> = async (local = true) =>
+export const typescript: ToolingDependency<Typescript> = async (local = true) =>
   importModule(TYPESCRIPT_DEPENDENCIES.TYPESCRIPT, local);

@@ -1,6 +1,6 @@
 import { existsSync } from "fs";
 import { debug } from "../../logging";
-import { getPath } from "../../filesystem/npm/getPath";
+import { getPath } from "../npm/getPath";
 
 export const getTSConfig = async (cwd: string, userConfig?: string): Promise<string> => {
   if (userConfig) {

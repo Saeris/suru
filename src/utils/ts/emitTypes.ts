@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
-import type Typescript from "typescript";
 import type { PickKnown } from "../../types";
 import type { NormalizedCompilerOptions } from "./normalizeCompilerOptions";
 import { omit } from "../omit";
+import type { Typescript, CompilerOptions, Program, EmitResult } from "./types";
 
 export const emitTypes = ({
   ts,
@@ -10,18 +10,18 @@ export const emitTypes = ({
   options,
   outDir
 }: {
-  ts: typeof Typescript;
+  ts: Typescript;
   fileNames: string[];
-  options: Typescript.CompilerOptions | PickKnown<NormalizedCompilerOptions>;
+  options: CompilerOptions | PickKnown<NormalizedCompilerOptions>;
   outDir: string;
 }): {
-  program: Typescript.Program;
-  emitResult: Typescript.EmitResult;
+  program: Program;
+  emitResult: EmitResult;
   results: Map<string, string>;
 } => {
   const results = new Map<string, string>();
-  const config: Typescript.CompilerOptions = {
-    ...(omit(options, [`moduleResolution`]) as Typescript.CompilerOptions),
+  const config: CompilerOptions = {
+    ...(omit(options, [`moduleResolution`]) as CompilerOptions),
     emitDeclarationOnly: true,
     declarationMap: false,
     declarationDir: outDir
