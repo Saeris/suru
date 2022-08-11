@@ -2723,6 +2723,7 @@ __metadata:
     "@types/rollup-plugin-peer-deps-external": ^2.2.1
     "@types/semver": ^7.3.9
     "@types/shelljs": ^0.8.11
+    "@types/text-table": ^0.2.2
     chalk: 4.1.2
     commitlint: ^16.2.3
     core-js: 3.21.1
@@ -3222,6 +3223,13 @@ __metadata:
   version: 2.0.1
   resolution: "@types/stack-utils@npm:2.0.1"
   checksum: 205fdbe3326b7046d7eaf5e494d8084f2659086a266f3f9cf00bccc549c8e36e407f88168ad4383c8b07099957ad669f75f2532ed4bc70be2b037330f7bae019
+  languageName: node
+  linkType: hard
+
+"@types/text-table@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "@types/text-table@npm:0.2.2"
+  checksum: f72ee49b50f2e912876cf7366ca1b218a58826e9af8b3171204f1cb73be80e722e094db3523dd7ddd31708c006b0b3d67ce5a2da6e9620ce99f5c4558109863b
   languageName: node
   linkType: hard
 

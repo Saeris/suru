@@ -118,6 +118,7 @@
     "@types/rollup-plugin-peer-deps-external": "^2.2.1",
     "@types/semver": "^7.3.9",
     "@types/shelljs": "^0.8.11",
+    "@types/text-table": "^0.2.2",
     "commitlint": "^16.2.3",
     "husky": "6.0.0",
     "is-ci": "^3.0.1",

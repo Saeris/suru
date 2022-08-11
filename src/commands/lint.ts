@@ -8,6 +8,7 @@ import { VERSION } from "../types/module";
 import { error, log } from "../logging";
 import { getConfig } from "../filesystem/config";
 import { getPath } from "../filesystem/npm";
+import { stylishStats } from "../utils/eslint/stylishStats";
 
 export class Lint extends Command {
   static description = `Lints the files in the current project`;
@@ -79,10 +80,10 @@ export class Lint extends Command {
           // We explicitly set the config on the line above
           useEslintrc: false
         });
-        const formatter = await eslint.loadFormatter(`stylish`);
+        //const formatter = await eslint.loadFormatter(`stylish`);
         const results = await eslint.lintFiles(argv);
         await ESLint.outputFixes(results);
-        const resultText = await formatter.format(
+        const resultText = await stylishStats(
           parsedFlags.quiet ? ESLint.getErrorResults(results) : results
         );
         log(resultText.split(`\n`).join(`\n    `));
