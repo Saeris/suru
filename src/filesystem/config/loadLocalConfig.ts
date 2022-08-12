@@ -40,5 +40,6 @@ export const loadLocalConfig = async <Config extends object>(
         (err as Error).message
       }`
     );
+    process.exit(1);
   }
 };

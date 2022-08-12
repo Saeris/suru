@@ -49,6 +49,7 @@ interface EntryTypes<S extends string> extends Package {
 }
 
 interface EntryLib<S extends string> extends Package {
+  main: `./lib/${S}.js`;
   esnext: `./lib/${S}.js`;
   exports: {
     ".": `./lib/${S}.js`;
@@ -172,7 +173,8 @@ export const addEntrypoint = async <S extends string, T extends EntrypointType, 
           default: `./lib/${fileName}.js` as const
         },
         {
-          esnext: `./lib/${fileName}.js` as const
+          esnext: `./lib/${fileName}.js` as const,
+          main: `./lib/${fileName}.js` as const
         }
       )
   };

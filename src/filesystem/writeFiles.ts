@@ -24,5 +24,6 @@ export const writeFiles = async (files: Map<string, string | null | undefined>):
     );
   } catch (err: unknown) {
     error(`Failed to write files`);
+    process.exit(1);
   }
 };

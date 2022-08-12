@@ -14,5 +14,5 @@ module.exports = {
     "import/no-unused-modules": `off`,
     "import/no-deprecated": `off`
   },
-  ignorePatterns: [`*.js`, `./dist/**/*`, `./bin/**/*`]
+  ignorePatterns: [`*.js`, `dist/**/*`, `bin/run`, `**/__fixtures__/**/*`]
 };

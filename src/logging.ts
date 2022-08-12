@@ -3,8 +3,6 @@ import type { Logger } from "winston";
 import winston, { createLogger, format } from "winston";
 import chalk from "chalk";
 import colorize from "json-colorizer";
-import type { Interfaces } from "@oclif/core";
-import { Errors } from "@oclif/core";
 
 type SetupReporting = (options?: {
   level?: "debug" | "info" | "warn" | "error";
@@ -65,7 +63,7 @@ export const setupReporting: SetupReporting = ({
 
 export const logger = setupReporting({ level: process.env.DEBUG ? `debug` : `info` });
 
-export const log = (message?: string | any, ...args: any[]): void => {
+export const log = (message?: string, ...args: any[]): void => {
   if (message) {
     logger.info(message, ...args);
   }
@@ -73,23 +71,4 @@ export const log = (message?: string | any, ...args: any[]): void => {
 
 export const warn = logger.warn.bind(logger);
 export const debug = logger.debug.bind(logger);
-
-export interface ErrorLogger {
-  (
-    input: string | Error,
-    options: {
-      code?: string;
-      exit: false;
-    } & Interfaces.PrettyPrintableError
-  ): void;
-  (
-    input: string | Error,
-    options?: {
-      code?: string;
-      exit?: number;
-    } & Interfaces.PrettyPrintableError
-  ): never;
-}
-
-export const error: ErrorLogger = (input: string | Error, options = {}) =>
-  Errors.error(input, options);
+export const error = logger.error.bind(logger);

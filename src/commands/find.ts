@@ -1,4 +1,4 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Option } from "clipanion";
 import execa from "execa";
 import { fetch } from "cross-fetch";
 import chalk from "chalk";
@@ -11,14 +11,15 @@ import { getWorkspaces, loadManifest, scopeToSnakeCase } from "../filesystem/npm
 import { spinner } from "../utils";
 
 export class Find extends Command {
-  static description = `Checks for available type definition packages and installs them.`;
+  static paths = [[`find`]];
+  // eslint-disable-next-line new-cap
+  static usage = Command.Usage({
+    description: `Checks for available type definition packages and installs them.`
+  });
 
-  static flags = {
-    help: Flags.help({ char: `h` }),
-    dryRun: Flags.boolean({
-      description: `Searches for available type definitions but skips installation.`
-    })
-  };
+  dryRun = Option.Boolean(`--dryRun`, {
+    description: `Searches for available type definitions but skips installation.`
+  });
 
   hasTypes = async (
     packageName: string,
@@ -44,7 +45,6 @@ export class Find extends Command {
   };
 
   findTypes = async (manifest: Package): Promise<void> => {
-    const { flags: parsedFlags } = await this.parse(Find);
     const searching = spinner(`Searching for types...\n`).start();
     const { dependencies = {}, devDependencies = {}, name, [PACKAGEROOT]: root } = manifest;
     const dependencyNames = Object.keys(dependencies);
@@ -80,20 +80,11 @@ export class Find extends Command {
 
     const [noTypes, hasNativeTypes, hasDeclarations] = typesForDependencies.reduce<string[][]>(
       (categories, [packageName, hasTypes]) => {
-        switch (hasTypes) {
-          case `native`: {
-            categories[1].push(packageName);
-            break;
-          }
-          case `declarations`: {
-            categories[2].push(`@types/${scopeToSnakeCase(packageName)}`);
-            break;
-          }
-          default: {
-            categories[0].push(packageName);
-            break;
-          }
-        }
+        hasTypes === `native`
+          ? categories[1].push(packageName)
+          : hasTypes === `declarations`
+          ? categories[2].push(`@types/${scopeToSnakeCase(packageName)}`)
+          : categories[0].push(packageName);
         return categories;
       },
       [[], [], []]
@@ -123,7 +114,7 @@ export class Find extends Command {
       ).info();
     }
 
-    if (!parsedFlags.dryRun && typesToInstall.length) {
+    if (!this.dryRun && typesToInstall.length) {
       const { installTypes } = await inquirer.prompt({
         type: `confirm`,
         name: `installTypes`,
@@ -145,7 +136,7 @@ export class Find extends Command {
     });
   };
 
-  async run(): Promise<void> {
+  async execute(): Promise<void> {
     const rootManifest = await loadManifest(await getConsumerRoot(), { local: true });
     const workspaces = await getWorkspaces();
 

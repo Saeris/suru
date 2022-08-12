@@ -39,9 +39,16 @@ export const loadManifest = async (
       throw new Error(`Could not resolve a path for ${moduleName}/package.json`);
     }
     const manifest = await loadJson<Package>(absFilePath);
+    const extract = <T>(map?: T): [string, string][] =>
+      Object.entries(map ?? {}).reduce((acc, [key, val]) => {
+        if (typeof val === `string`) {
+          acc.push([key, val]);
+        }
+        return acc;
+      }, new Array<[string, string]>());
     const hardDependencies = new Map([
-      ...Object.entries(manifest.dependencies ? manifest.dependencies : {}),
-      ...Object.entries(manifest.devDependencies ? manifest.devDependencies : {})
+      ...extract(manifest.dependencies),
+      ...extract(manifest.devDependencies)
     ]);
     manifest[HARDDEPENDENCIES] = hardDependencies;
     // Need to check for Yarn cache here as well

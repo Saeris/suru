@@ -14,7 +14,9 @@ export const getWorkspaces = async (): Promise<Package[]> => {
     ? rootManifest.workspaces
     : [...(rootManifest.workspaces?.packages ?? []), rootManifest.workspaces?.nohoist ?? []];
   const workspacePaths = (
-    await Promise.all(workspaces.map(async (workspace) => glob(`${workspace}/package.json`)))
+    await Promise.all(
+      workspaces.map(async (workspace) => glob(`${String(workspace)}/package.json`))
+    )
   ).flat();
   return Promise.all(
     workspacePaths.map(async (workspace) =>

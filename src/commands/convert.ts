@@ -1,5 +1,5 @@
 import path from "path";
-import { Command, Flags } from "@oclif/core";
+import { Command, Option } from "clipanion";
 import execa from "execa";
 import chalk from "chalk";
 import inquirer from "inquirer";
@@ -20,40 +20,34 @@ import { error } from "../logging";
 import { spinner } from "../utils";
 
 export class Convert extends Command {
-  static description = `Changes file extensions on project files to their Typescript equivalents using "git mv", preserving commit history`;
+  static paths = [[`convert`]];
+  // eslint-disable-next-line new-cap
+  static usage = Command.Usage({
+    description: `Changes file extensions on project files to their Typescript equivalents using "git mv", preserving commit history`
+  });
 
-  static flags = {
-    help: Flags.help({ char: `h` }),
-    ignore: Flags.string({
-      char: `i`,
-      description: `A comma separated list of glob patterns to ignore`,
-      default: ``
-    }),
-    dryRun: Flags.boolean({
-      description: `Outputs a list of files to be renamed only`
-    }),
-    quiet: Flags.boolean({
-      char: `q`,
-      description: `Suppresses logging of file paths`
-    }),
-    silent: Flags.boolean({
-      char: `s`,
-      description: `Disables all logging except for errors`
-    })
-  };
+  ignore = Option.String(`-i, --ignore`, ``, {
+    description: `A comma separated list of glob patterns to ignore`
+  });
 
-  static args = [
-    {
-      name: `rootDir`,
-      required: false,
-      description: `A directory from which to look for files relative to the project root (location of your ".git" folder)`,
-      default: `./src`
-    }
-  ];
+  dryRun = Option.Boolean(`--dryRun`, {
+    description: `Outputs a list of files to be renamed only`
+  });
 
-  async run(): Promise<void> {
-    const { flags: parsedFlags, argv } = await this.parse(Convert);
-    const { ignore, dryRun, quiet, silent } = parsedFlags;
+  quiet = Option.Boolean(`-q, --quiet`, {
+    description: `Suppresses logging of file paths`
+  });
+
+  silent = Option.Boolean(`-s, --silent`, {
+    description: `Disables all logging except for errors`
+  });
+
+  rootDir = Option.String(`-r, --rootDir`, `./src`, {
+    description: `A directory from which to look for files relative to the project root (location of your ".git" folder)`
+  });
+
+  async execute(): Promise<void> {
+    const { ignore, dryRun, quiet, silent, rootDir } = this;
     const { name } = await loadManifest();
 
     spinner(`Checking commit status of ${String(name)}`, { silent }).succeed();
@@ -72,19 +66,19 @@ export class Convert extends Command {
 
         if (!proceed) {
           spinner(`Skipped execution`, { silent }).fail();
-          this.exit(0);
+          process.exit(0);
         }
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
         error(`Error occured checking git status:`, err);
+        process.exit(1);
       }
     }
 
     const updateSpinner = spinner(`Searching for files to update...\n`).start();
 
     // Grab the root directory to glob from the CLI args
-    const rootDir = argv[0];
     const consumerRoot = await getConsumerRoot();
     const sourceDir = path.join(consumerRoot, rootDir);
     const ignored = ignore.length ? ignore.split(`,`) : [];

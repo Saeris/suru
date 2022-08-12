@@ -1,7 +1,7 @@
 import path from "path";
 import { existsSync } from "fs";
 import { promisify } from "util";
-import { Command, Flags } from "@oclif/core";
+import { Command, Option } from "clipanion";
 import type { OutputOptions } from "rollup";
 import rimraf from "rimraf";
 import { HEURISTICS } from "../types/package";
@@ -28,50 +28,43 @@ import { getTSConfig } from "../filesystem/config";
 const EXT_REGEX = /\.(?<ext>[jt]sx?)$/i;
 
 export class Pack extends Command {
-  static description = `Runs Pika Pack`;
+  static paths = [[`pack`]];
+  // eslint-disable-next-line new-cap
+  static usage = Command.Usage({
+    description: `Bundles project source files for distribution on NPM.`
+  });
 
-  static flags = {
-    help: Flags.help({ char: `h` }),
-    version: Flags.boolean({
-      char: `v`,
-      description: `Prints the semver version of the dependencies that will be used to build files.`
-    }),
-    config: Flags.string({
-      char: `c`,
-      description: `The path to a Babel config file specifying how to transpile the project`
-    }),
-    project: Flags.string({
-      char: `p`,
-      description: `The argument can be a file path to a valid JSON configuration file, or a directory path to a directory containing a tsconfig.json file`
-    }),
-    targets: Flags.string({
-      char: `t`,
-      description: `A list of module formats to build. Targets can be specified as a comma separated string from the following values: cjs, esm, umd (ex: --targets=esm,cjs)`
-    }),
-    bundle: Flags.boolean({
-      char: `b`,
-      description: `Generate minified bundles for each of the compilation targets defined by --targets`
-    }),
-    sourceMaps: Flags.boolean({
-      char: `m`,
-      description: `Generate sourcemaps for all output targets.`,
-      default: false
-    })
-  };
+  config = Option.String(`-c, --config`, {
+    description: `The path to a Babel config file specifying how to transpile the project`
+  });
 
-  static args = [
-    {
-      name: `files`,
-      required: false,
-      description: `A list of filenames to transform`
-    }
-  ];
+  project = Option.String(`-p, --project`, {
+    description: `The argument can be a file path to a valid JSON configuration file, or a directory path to a directory containing a tsconfig.json file`
+  });
 
-  async run(): Promise<void> {
+  targets = Option.Array(`-t, --targets`, {
+    description: `A list of module formats to build. Targets can be specified as a comma separated string from the following values: cjs, esm, umd (ex: --targets=esm,cjs)`
+  });
+
+  bundle = Option.Boolean(`-b, --bundle`, {
+    description: `Generate minified bundles for each of the compilation targets defined by --targets`
+  });
+
+  sourceMaps = Option.Boolean(`-m, --sourceMaps`, false, {
+    description: `Generate sourcemaps for all output targets.`
+  });
+
+  version = Option.Boolean(`-v, --version`, {
+    description: `Prints the semver version of the dependencies that will be used to build files.`
+  });
+
+  // eslint-disable-next-line new-cap
+  files = Option.Rest();
+
+  async execute(): Promise<void> {
     const cwd = process.cwd();
-    const { flags: parsedFlags } = await this.parse(Pack);
     // Log out versions of related tooling versions (need to abstract this out)
-    if (parsedFlags.version) {
+    if (this.version) {
       await logDependencyVersions(
         new Map([
           [`babel`, true],
@@ -92,9 +85,9 @@ export class Pack extends Command {
     const basename = entryFileName.replace(EXT_REGEX, ``);
     const bundleName = entryFileName.replace(EXT_REGEX, `.js`);
     const srcDir = path.dirname(absEntryPoint);
-    const files = await getSourceFiles({ cwd: srcDir });
-    const sourceMaps = parsedFlags.sourceMaps;
-    const targets = getTargets(parsedFlags.targets);
+    const files = this.files.length ? this.files : await getSourceFiles({ cwd: srcDir });
+    const sourceMaps = this.sourceMaps;
+    const targets = getTargets(this.targets?.join(``));
 
     // Step 1: Clean up previous build output
     if (existsSync(dist)) {
@@ -143,7 +136,7 @@ export class Pack extends Command {
       const { results, ...rest } = emitTypes({
         ts,
         fileNames: files.map((filename) => path.join(srcDir, filename)),
-        options: await loadCompilerOptions(await getTSConfig(cwd, parsedFlags.project)),
+        options: await loadCompilerOptions(await getTSConfig(cwd, this.project)),
         outDir: path.join(dist, `types`)
       });
       await writeFiles(results);
@@ -154,7 +147,7 @@ export class Pack extends Command {
     }
 
     // Step 4: Geneate Bundles from lib
-    if (targets.length && parsedFlags.bundle) {
+    if (targets.length && this.bundle) {
       const bundling = spinner(` Generating Bundles...\n`).start();
       await writeBundles(
         await generateBundle(path.join(dist, `lib`, bundleName)),
