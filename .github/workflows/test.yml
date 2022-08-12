@@ -2,9 +2,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   test:
@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14, 16]
+        node-version: [14, 16, 18]
 
     steps:
       - uses: actions/checkout@v2
@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
-        run: yarn ci
+        run: yarn
       - name: Run tests
         run: yarn test
       - name: Upload coverage to Codecov
