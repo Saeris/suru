@@ -11,6 +11,8 @@ describe(`findJSXFiles`, () => {
     ).map((filePath) => path.join(__dirname, filePath));
     const actual = await findJSXFiles(fixtures);
     const expected = fixtures.slice(1);
-    expect(actual).toStrictEqual(expected);
+    for (const file of actual) {
+      expect(expected).toContain(file);
+    }
   });
 });

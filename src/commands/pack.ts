@@ -136,7 +136,7 @@ export class Pack extends Command {
       const { results, ...rest } = emitTypes({
         ts,
         fileNames: files.map((filename) => path.join(srcDir, filename)),
-        options: await loadCompilerOptions(await getTSConfig(cwd, this.project)),
+        options: loadCompilerOptions(await getTSConfig(cwd, this.project)),
         outDir: path.join(dist, `types`)
       });
       await writeFiles(results);

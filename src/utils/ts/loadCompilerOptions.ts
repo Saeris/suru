@@ -1,4 +1,5 @@
 import path from "path";
+import { findConfigFile, readConfigFile, parseJsonConfigFileContent, sys } from "typescript";
 import { debug } from "../../logging";
 import type { PickKnown } from "../../types";
 import type { NormalizedCompilerOptions } from "./normalizeCompilerOptions";
@@ -12,19 +13,16 @@ import { normalizeCompilerOptions } from "./normalizeCompilerOptions";
  *
  * @param project An absolute filepath for a Typescript `tsconfig.json` file.
  */
-export const loadCompilerOptions = async (
-  project: string
-): Promise<PickKnown<NormalizedCompilerOptions>> => {
-  const ts = await import(`typescript`);
+export const loadCompilerOptions = (project: string): PickKnown<NormalizedCompilerOptions> => {
   const baseDir = path.dirname(project); //?
   const fileName = path.basename(project); //?
-  const tsconfigPath = ts.findConfigFile(baseDir, ts.sys.fileExists.bind(null), fileName);
+  const tsconfigPath = findConfigFile(baseDir, sys.fileExists.bind(null), fileName);
 
   if (!tsconfigPath) {
     throw new Error(`Unable to find a configuration file in path ${baseDir} named: ${fileName}`);
   }
 
-  const { config, error } = ts.readConfigFile(tsconfigPath, ts.sys.readFile.bind(null));
+  const { config, error } = readConfigFile(tsconfigPath, sys.readFile.bind(null));
 
   if (error) {
     // eslint-disable-next-line no-console
@@ -32,7 +30,7 @@ export const loadCompilerOptions = async (
     throw new Error(`Error reading typescript configration: ${fileName}`);
   }
 
-  const { options } = ts.parseJsonConfigFileContent(config, ts.sys, baseDir);
+  const { options } = parseJsonConfigFileContent(config, sys, baseDir);
 
   return normalizeCompilerOptions(options);
 };

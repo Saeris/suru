@@ -23,7 +23,7 @@ export class Check extends Command {
   async execute(): Promise<void> {
     const cwd = process.cwd();
     const project = await getTSConfig(cwd, this.project);
-    const compilerOptions = mapFlags(await loadCompilerOptions(project));
+    const compilerOptions = mapFlags(loadCompilerOptions(project));
     const args = [`--noEmit`, ...this.files, ...compilerOptions.flat()];
     const checking = spinner(`Typechecking files...\n`).start();
     try {
