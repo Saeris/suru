@@ -27,16 +27,16 @@ export const loadLocalConfig = async <Config extends object>(
     const result = await findConfig(name, { gitRoot: await getConsumerRoot() });
     if (result) {
       const { config, filepath } = result;
-      log(`Using configuration found in: ${filepath}`);
+      log(`  Using configuration found in: ${filepath}`);
       return { config, filepath };
     }
-    log(`Unable to find a config for ${name} in project, loading a default for command instead`);
+    log(`  Unable to find a config for ${name} in project, loading a default for command instead`);
     const config = await importModule<Config>(defaultPath);
     const filepath = config[MODULELOCATION];
     return { config, filepath };
   } catch (err: unknown) {
     error(
-      `Unexpected error occurred while searching for a config for ${name}: \n\n    ${
+      `  Unexpected error occurred while searching for a config for ${name}: \n\n    ${
         (err as Error).message
       }`
     );

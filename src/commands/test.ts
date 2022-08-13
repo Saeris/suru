@@ -5,7 +5,7 @@ import { cosmiconfig } from "cosmiconfig";
 import type { TransformOptions } from "@babel/core";
 import babelConfig from "../defaults/babelConfig";
 import type defaultJestConfig from "../defaults/jestConfig";
-import { mapFlags } from "../utils";
+import { mapFlags, spinner } from "../utils";
 import { error, log } from "../logging";
 import { getConfig } from "../filesystem/config";
 import { getPath } from "../filesystem/npm";
@@ -53,6 +53,7 @@ export class Test extends Command {
 
   async execute(): Promise<void> {
     const cwd = process.cwd();
+    const testing = spinner(`Running Jest tests...\n`).start();
     const { filepath } = await getConfig<typeof defaultJestConfig>(
       cwd,
       `jest`,
@@ -64,7 +65,6 @@ export class Test extends Command {
       config: filepath
     });
     const args = [...this.files, ...options.flat()];
-    log(`Running Jest tests...`);
 
     try {
       await execa.node(await getPath(`jest/bin/jest`, !this.useDefaults), args, {
@@ -72,7 +72,9 @@ export class Test extends Command {
         cwd,
         stdio: `inherit`
       });
+      testing.succeed(`Unit testing complete`);
     } catch (err: unknown) {
+      testing.fail(`Unit testing failed: ${(err as Error).message}`);
       process.exit(1);
     }
   }

@@ -5,10 +5,11 @@ import semver from "semver";
 import * as dependencies from "../dependencies";
 import type defaultESLintConfig from "../defaults/eslintConfig";
 import { VERSION } from "../types/module";
-import { error, log } from "../logging";
+import { log } from "../logging";
 import { getConfig } from "../filesystem/config";
 import { getPath } from "../filesystem/npm";
 import { stylishStats } from "../utils/eslint/stylishStats";
+import { spinner } from "../utils";
 
 export class Lint extends Command {
   static paths = [[`lint`]];
@@ -43,6 +44,7 @@ export class Lint extends Command {
   async execute(): Promise<void> {
     const cwd = process.cwd();
     const argv = this.files.length ? this.files : [`./**/src/**/*.{j,t}s?(x)`];
+    const linting = spinner(`Linting files...\n`).start();
     const { ESLint, [VERSION]: version } = await dependencies.eslint();
 
     if (this.version && version) {
@@ -60,11 +62,19 @@ export class Lint extends Command {
 
     if (version && semver.gt(`7.0.0`, version)) {
       log(`Older version of ESLint detected, invoking via CLI`);
-      await execa.node(await getPath(`eslint/bin/eslint`, !this.useDefaults), argv, {
-        env: { FORCE_COLOR: `true` },
-        cwd,
-        stdio: `inherit`
-      });
+      try {
+        await execa.node(await getPath(`eslint/bin/eslint`, !this.useDefaults), argv, {
+          env: { FORCE_COLOR: `true` },
+          cwd,
+          stdio: `inherit`
+        });
+        linting.succeed(`Linting complete`);
+      } catch (err: unknown) {
+        linting.fail(
+          `Failed to run command Lint, unexpected error encountered: ${(err as Error).message}`
+        );
+        process.exit(1);
+      }
     } else {
       try {
         const eslint = new ESLint({
@@ -82,8 +92,9 @@ export class Lint extends Command {
           this.quiet ? ESLint.getErrorResults(results) : results
         );
         log(resultText.split(`\n`).join(`\n    `));
+        linting.succeed(`Linting complete`);
       } catch (err: unknown) {
-        error(
+        linting.fail(
           `Failed to run command Lint, unexpected error encountered: ${(err as Error).message}`
         );
         process.exit(1);

@@ -29,7 +29,7 @@ export const getConfig = async <Config extends object>(
 
   if (userConfig) {
     const moduleName = `${cwd}/${userConfig}`;
-    log(`   Using user supplied config from ${moduleName}`);
+    log(`  Using user supplied config from ${moduleName}`);
     const config = await importModule<Config>(moduleName);
     const filepath = config[MODULELOCATION];
     return { config, filepath };
